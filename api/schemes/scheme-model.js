@@ -8,6 +8,7 @@ function find() {
 
 function findById(id) {
     let schemaObject = db('schemes').where({ id: id })[0];
+
     if (!schemaObject) {
         return Promise.resolve(null);
     }
@@ -28,9 +29,23 @@ function findSteps(id) {
     return stepsArray;
 }
 
+async function add(scheme) {
+    const newSchemeId = await db('schemes').insert(scheme);
+
+    if (!newSchemeId[0]) {
+        return Promise.resolve(null);
+    }
+
+    return Promise.resolve({
+        id: newSchemeId[0],
+        scheme_name: scheme.scheme_name
+    });
+}
+
 // Export
 module.exports = {
     find,
     findById,
-    findSteps
+    findSteps,
+    add
 };
