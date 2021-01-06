@@ -46,6 +46,21 @@ router.get('/:id/steps', (req, res) => {
     });
 });
 
+router.post('/:id/addStep', (req, res) => {
+  const { id } = req.params;
+
+  const step = req.body;
+
+  Schemes.addStep(step, id)
+    .then(step => {
+      if (step) {
+        res.json(step);
+      } else {
+        res.status(404).json({ message: 'Could not update given scheme' });
+      }
+    })
+});
+
 router.post('/', (req, res) => {
   const schemeData = req.body;
 
