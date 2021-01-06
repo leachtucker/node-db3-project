@@ -7,21 +7,21 @@ function find() {
     return db('schemes');
 }
 
-function findById(id) {
-    const schemaObject = db('schemes').where({ id: id });
+async function findById(id) {
+    const schemaObject = await db('schemes').where({ id: id });
 
     if (!schemaObject) {
         return Promise.resolve(null);
     }
 
-    return schemaObject;
+    return schemaObject[0];
 }
 
 function findSteps(id) {
     const stepsArray = db('steps as s')
         .join('schemes as sch', 's.scheme_id', 'sch.id')
         .select('s.id', 'sch.scheme_name', 's.step_number', 's.instructions')
-        .where('sch.id', id).orderBy('s.step_number', 'desc');
+        .where('sch.id', id).orderBy('s.step_number', 'asc');
 
     if (!stepsArray) {
         return Promise.resolve(null);
@@ -44,17 +44,43 @@ async function add(scheme) {
 };
 
 async function update(changes, id) {
-    const records = await db('schemes').where({id: id}).update(changes);
+    // Resolves to the number of records updated
+    const updatedRecords = await db('schemes').where({id: id}).update(changes);
 
-    if (!records) {
+    if (!updatedRecords) {
+        return Promise.resolve(null);
+    }
+
+    const updatedScheme = await findById(id);
+
+    return Promise.resolve({
+        ...updatedScheme
+    });
+};
+
+async function remove(id) {
+    const schemeToDel = await findById(id);
+    const delRecords = await db('schemes').where({ id: id }).del();
+
+    if (delRecords.removed <= 0) {
+        Promise.resolve(null);
+    }
+
+    return Promise.resolve(schemeToDel);
+}
+
+async function addStep(step, scheme_id) {
+    const newStep = await db('steps').insert({ ...step, scheme_id });
+
+    if (!newStep) {
         return Promise.resolve(null);
     }
 
     return Promise.resolve({
-        id: id,
-        ...changes
+        ...step,
+        scheme_id: scheme_id
     });
-};
+}
 
 // Export
 module.exports = {
@@ -62,5 +88,7 @@ module.exports = {
     findById,
     findSteps,
     add,
-    update
+    update,
+    remove,
+    addStep
 };
