@@ -1,4 +1,5 @@
 // Import database
+const { schema } = require('../../data/db-config');
 const db = require('../../data/db-config');
 
 // Helper functions
@@ -6,8 +7,8 @@ function find() {
     return db('schemes');
 }
 
-function findById(id) {
-    let schemaObject = db('schemes').where({ id: id })[0];
+async function findById(id) {
+    const schemaObject = await db('schemes').where({ id: id });
 
     if (!schemaObject) {
         return Promise.resolve(null);
@@ -20,7 +21,7 @@ function findSteps(id) {
     const stepsArray = db('steps as s')
         .join('schemes as sch', 's.scheme_id', 'sch.id')
         .select('s.id', 'sch.scheme_name', 's.step_number', 's.instructions')
-        .where('sch.id', id);
+        .where('sch.id', id).orderBy('s.step_number', 'desc');
 
     if (!stepsArray) {
         return Promise.resolve(null);
@@ -40,7 +41,17 @@ async function add(scheme) {
         id: newSchemeId[0],
         scheme_name: scheme.scheme_name
     });
-}
+};
+
+function update(changes, id) {
+    const records = db('schemes').where({id: id}).update(changes);
+
+    if (!records) {
+        return Promise.resolve(null);
+    }
+
+    return records;
+};
 
 // Export
 module.exports = {
