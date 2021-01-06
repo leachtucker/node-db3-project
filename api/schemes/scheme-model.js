@@ -7,8 +7,8 @@ function find() {
     return db('schemes');
 }
 
-async function findById(id) {
-    const schemaObject = await db('schemes').where({ id: id });
+function findById(id) {
+    const schemaObject = db('schemes').where({ id: id });
 
     if (!schemaObject) {
         return Promise.resolve(null);
@@ -43,14 +43,17 @@ async function add(scheme) {
     });
 };
 
-function update(changes, id) {
-    const records = db('schemes').where({id: id}).update(changes);
+async function update(changes, id) {
+    const records = await db('schemes').where({id: id}).update(changes);
 
     if (!records) {
         return Promise.resolve(null);
     }
 
-    return records;
+    return Promise.resolve({
+        id: id,
+        ...changes
+    });
 };
 
 // Export
@@ -58,5 +61,6 @@ module.exports = {
     find,
     findById,
     findSteps,
-    add
+    add,
+    update
 };
